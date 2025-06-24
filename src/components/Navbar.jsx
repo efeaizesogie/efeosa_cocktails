@@ -18,7 +18,7 @@ const Navbar = () => {
             background: "transparent"
         }, {
             backgroundColor: "#00000050",
-            backgroundFilter: "blur(10px)",
+            backgroundFilter: "blur(20px)",
             duration: 1,
             ease: "power1.inOut"
         })
@@ -30,7 +30,7 @@ const Navbar = () => {
                 <a href="#home" className="flex item-center gap-2">
                     <img src="/images/logo.png" alt="logo" />
                     <p>
-                        HettyB
+                        ChillSpot
                     </p>
                 </a>
 

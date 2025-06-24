@@ -71,6 +71,29 @@ const mockTailLists = [
     },
 ];
 
+const topAboutImages = [
+    {
+        imgPath: "/images/abt1.png",
+        span: 3,
+    },{
+        imgPath: "/images/abt2.png",
+        span: 6,
+    },{
+        imgPath: "/images/abt5.png",
+        span: 3,
+    },
+]
+
+const bottomAboutImages = [
+    {
+        imgPath: "/images/abt3.png",
+        span: 8,
+    },{
+        imgPath: "/images/abt4.png",
+        span: 4,
+    },
+]
+
 const profileLists = [
     {
         imgPath: "/images/profile1.png",
@@ -180,4 +203,6 @@ export {
     storeInfo,
     socials,
     sliderLists,
+    topAboutImages,
+    bottomAboutImages
 };
