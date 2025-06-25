@@ -109,6 +109,8 @@ const profileLists = [
     },
 ];
 
+const starImages = Array(5).fill("/images/star.png");
+
 const featureLists = [
     "Perfectly balanced blends",
     "Garnished to perfection",
@@ -204,5 +206,6 @@ export {
     socials,
     sliderLists,
     topAboutImages,
-    bottomAboutImages
+    bottomAboutImages,
+    starImages
 };

@@ -1,10 +1,37 @@
 import React from 'react'
+import {openingHours, socials} from "../constants/index.js";
+import {useGSAP} from "@gsap/react";
+import {SplitText} from "gsap/all";
+import gsap from "gsap";
 
 const Footer = () => {
+    useGSAP(() => {
+        const wordSplit = SplitText.create(".content h2", {
+            type: "words"
+        })
+
+        gsap.timeline({
+            scrollTrigger: {
+                trigger: "#contact",
+                start: "top center"
+            },
+            ease: "power2.inOut",
+        }).from(wordSplit.lines, {
+                opacity: 0,
+                stagger: 0.02, yPercent: 100, ease: "power2.inOut",
+        }).from("#contact h3, #contact p", {
+            opacity: 0,
+            stagger: 0.02, yPercent: 100, ease: "power2.inOut",
+        }).to("#f-right-leaf", {
+            y: -50, ease: "power2.inOut", duration: 1
+        }, ).to("#f-left-leaf", {
+            y: -50, ease: "power2.inOut", duration: 1
+        }, "<")
+    })
     return (
         <section id="contact">
-            <img src="/images/cocktail-left-leaf.png" alt="l-leaf" id="f-left-leaf" />
-            <img src="/images/cocktail-right-leaf.png" alt="r-leaf" id="f-right-leaf" />
+            <img src="/images/footer-left-leaf.png" alt="l-leaf" id="f-left-leaf" />
+            <img src="/images/footer-right-leaf.png" alt="r-leaf" id="f-right-leaf" />
 
             <div className="content">
                 <h2>
@@ -34,14 +61,24 @@ const Footer = () => {
                     <h3 >
                         Open every day
                     </h3>
-                    <p>
-                        Mon-Thu : 11:00am - 12am <br/> Fri : 11:00am - 2am <br/> Sat : 9:00am - 2am <br/> Sun : 9:00am - 1 am
-                    </p>
+                    {openingHours.map(({day, time}) => (
+                        <p key={day}> {day } : {time} </p>
+                    ))}
+
                 </div>
                 <div>
                     <h3 >
                         Socials
                     </h3>
+
+                    <div className="flex-center gap-5">
+                        {socials.map((social) => (
+                            <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.name}>
+                                <img src={social.icon} alt={social.name} />
+                            </a>
+
+                        ))}
+                    </div>
 
                 </div>
             </div>

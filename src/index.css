@@ -121,7 +121,7 @@ body {
           @apply space-y-5 text-lg lg:max-w-2xs md:max-w-xs w-full;
 
           p {
-            @apply text-left;
+            @apply text-left  ;
           }
 
           a {
