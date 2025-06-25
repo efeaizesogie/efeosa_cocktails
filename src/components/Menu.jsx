@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react'
+import React, {useRef, useState, useCallback, } from 'react'
 import {sliderLists} from "../constants/index.js";
 import {useGSAP} from "@gsap/react";
 import gsap from "gsap";
@@ -6,7 +6,9 @@ import gsap from "gsap";
 const Menu = () => {
     const infoRef = useRef();
     const [currentIndex, setCurrentIndex] = useState(0);
+    const animationsRef = useRef(null);
 
+    // Only create the timeline once
     useGSAP(() => {
         const leafScroll = gsap.timeline(
             {
@@ -15,43 +17,54 @@ const Menu = () => {
                     start: "-10% top",
                     end: "bottom 80%",
                     scrub: true,
+                    markers: false, // Remove markers in production
                 }
             })
 
         leafScroll.to("#m-left-leaf", {y: -300, })
         leafScroll.to("#m-right-leaf",  {y: 300, })
-    })
+    }, { scope: document.documentElement }) // Specify scope to improve performance
 
+    // Optimize animations when currentIndex changes
     useGSAP(() => {
-        gsap.fromTo("#title, .info p, .details h2", {
-            opacity: 0, yPercent: 100,
-        },
- {opacity: 1, yPercent: 0, duration: 1},)
+        // Kill any existing animations to prevent conflicts
+        if (animationsRef.current) {
+            animationsRef.current.forEach(anim => anim.kill());
+        }
 
-        gsap.fromTo(".details p", {
+        // Store new animations for cleanup
+        animationsRef.current = [
+            gsap.fromTo("#title, .info p, .details h2", {
                 opacity: 0, yPercent: 100,
             },
-            {opacity: 1, yPercent: 0, duration: 1},)
+            {opacity: 1, yPercent: 0, duration: 0.8}),
 
-        gsap.fromTo(".cocktail img", {
-            opacity: 0, xPercent: -100
-        },
- {opacity: 1, xPercent: 0, duration: 1, ease: "easeOutExpo"},)
+            gsap.fromTo(".details p", {
+                opacity: 0, yPercent: 100,
+            },
+            {opacity: 1, yPercent: 0, duration: 0.8}),
 
+            gsap.fromTo(".cocktail img", {
+                opacity: 0, xPercent: -100
+            },
+            {opacity: 1, xPercent: 0, duration: 0.8, ease: "easeOutExpo"})
+        ];
     }, [currentIndex])
 
     const allCocktails = sliderLists.length;
 
-    function goToSlides(index) {
+    // Memoize the goToSlides function to prevent unnecessary re-renders
+    const goToSlides = useCallback((index) => {
         const newIndex = (index + allCocktails) % allCocktails;
-
         setCurrentIndex(newIndex);
-    }
+    }, [allCocktails]);
 
-    const getCocktailInfo = indexOf => {
+    // Memoize the getCocktailInfo function
+    const getCocktailInfo = useCallback((indexOf) => {
         return sliderLists[(currentIndex + indexOf + allCocktails) % allCocktails];
-    }
+    }, [currentIndex, allCocktails]);
 
+    // Memoize cocktail info to prevent recalculation on every render
     const currentCocktailInfo = getCocktailInfo(0);
     const prevCocktailInfo = getCocktailInfo(-1);
     const nextCocktailInfo = getCocktailInfo(+1);

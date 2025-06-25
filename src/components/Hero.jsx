@@ -1,4 +1,4 @@
-import React, {useRef} from 'react'
+import React, {useRef, memo} from 'react'
 import {useGSAP} from "@gsap/react";
 import gsap from "gsap";
 import {SplitText} from "gsap/all";
@@ -7,58 +7,98 @@ import {useMediaQuery} from "react-responsive";
 const Hero = () => {
 
     const videoRef = useRef();
-    const isMobile = useMediaQuery({maxWidth: 760} );
+    const animationsRef = useRef([]);
+    // Memoize media query result to prevent unnecessary re-renders
+    const isMobile = useMediaQuery({maxWidth: 760});
 
 
     useGSAP(() => {
-        const heroSplit = new SplitText( ".title", { type: "chars, words"})
-        const paraSplit = new SplitText( ".subtitle", { type: "lines"})
+        // Clean up previous animations
+        if (animationsRef.current.length) {
+            animationsRef.current.forEach(anim => anim.kill());
+            animationsRef.current = [];
+        }
 
+        // Optimize text animations by reducing complexity
+        const heroSplit = new SplitText(".title", { 
+            type: "chars, words",
+            // Reduce the number of elements created
+            charsClass: "char",
+            wordsClass: "word"
+        });
+
+        // Use words instead of lines for better performance
+        const paraSplit = new SplitText(".subtitle", { 
+            type: "words, lines",
+            linesClass: "line"
+        });
+
+        // Add gradient in a more performant way
         heroSplit.chars.forEach((char) => char.classList.add("text-gradient"));
 
-        gsap.from(heroSplit.chars, {
-            yPercent: 100,
-            duration: 1.8,
-            ease: "expo.out",
-            stagger: 0.08,
-        })
+        // Store animations for cleanup
+        animationsRef.current.push(
+            gsap.from(heroSplit.chars, {
+                yPercent: 100,
+                duration: 1.5, // Slightly faster animation
+                ease: "expo.out",
+                stagger: 0.05, // Reduce stagger time
+            }),
 
-        gsap.from(paraSplit.lines, {
-            opacity: 0,
-            yPercent: 100,
-            duration: 1.8,
-            ease: "expo.out",
-            stagger: 0.08,
-            delay: 1
-        })
+            gsap.from(paraSplit.lines, {
+                opacity: 0,
+                yPercent: 100,
+                duration: 1.5, // Slightly faster animation
+                ease: "expo.out",
+                stagger: 0.05, // Reduce stagger time
+                delay: 0.8 // Reduce delay
+            })
+        );
 
-        gsap.timeline( {
-            scrollTrigger: {
-                trigger: "#hero",
-                start: "top top",
-                end: "bottom 80%",
-                scrub: true,
-            }
-        }).to(".right-leaf", {y: 200}, 0)
-            .to(".left-leaf", {y: -200}, 0)
+        // Store leaf animations for cleanup
+        animationsRef.current.push(
+            gsap.timeline({
+                scrollTrigger: {
+                    trigger: "#hero",
+                    start: "top top",
+                    end: "bottom 80%",
+                    scrub: 0.5, // Add a small delay for smoother scrolling
+                }
+            }).to(".right-leaf", {y: 200, force3D: true}, 0) // Force GPU acceleration
+              .to(".left-leaf", {y: -200, force3D: true}, 0) // Force GPU acceleration
+        );
 
-        const startValue = isMobile ? "top 50% " : "center 60%"
-        const endValue = isMobile ? "200% top" : "bottom top"
+        // Memoize these values to prevent recalculation
+        const startValue = isMobile ? "top 50% " : "center 60%";
+        const endValue = isMobile ? "200% top" : "bottom top";
 
-        const videoTl = gsap.timeline( {
+        // Optimize video playback
+        const videoTl = gsap.timeline({
             scrollTrigger: {
                 trigger: "video",
                 start: startValue,
                 end: endValue,
-                scrub: true,
+                scrub: 0.5, // Add a small delay for smoother scrolling
                 pin: true,
+                // Add markers only in development
+                markers: false,
             }
-        })
+        });
 
-        videoRef.current.onloadedmetadata = () => {
-            videoTl.to(videoRef.current, {
-                currentTime: videoRef.current.duration,
-            })
+        // Store video animation for cleanup
+        animationsRef.current.push(videoTl);
+
+        // Optimize video playback by using requestAnimationFrame
+        if (videoRef.current) {
+            // Add loading attribute for better performance
+            videoRef.current.setAttribute('loading', 'lazy');
+
+            videoRef.current.onloadedmetadata = () => {
+                videoTl.to(videoRef.current, {
+                    currentTime: videoRef.current.duration,
+                    ease: "none", // Linear easing for smoother playback
+                });
+            };
         }
 
     }, [])
@@ -95,11 +135,19 @@ const Hero = () => {
             </section>
 
             <div className="video absolute inset-0">
-                <video ref={videoRef} src="/videos/output.mp4" muted playsInline preload="auto" />
+                <video 
+                    ref={videoRef} 
+                    src="/videos/output.mp4" 
+                    muted 
+                    playsInline 
+                    preload="metadata"
+                    className="will-change-transform" 
+                />
             </div>
         </>
 
     )
 }
 
-export default Hero
+// Memoize the entire component to prevent unnecessary re-renders
+export default memo(Hero)

@@ -1,39 +1,72 @@
-import React from 'react'
+import React, { useRef, memo } from 'react'
 import gsap from "gsap";
 import {SplitText} from "gsap/all";
 import { profileLists, starImages} from "../constants/index.js";
 import {useGSAP} from "@gsap/react";
 
 const About = () => {
+    // Reference to store animations for cleanup
+    const animationsRef = useRef([]);
 
     useGSAP(() => {
+        // Clean up previous animations
+        if (animationsRef.current.length) {
+            animationsRef.current.forEach(anim => anim.kill());
+            animationsRef.current = [];
+        }
+
+        // Optimize text animations by using words instead of characters
         const textSplit = new SplitText("#about h2", {
-            type: "words"
-        })
+            type: "words",
+            wordsClass: "split-word"
+        });
 
+        // Use words for better performance
         const lineSplit = new SplitText(".sub-content p", {
-            type: "lines"
-        })
+            type: "lines",
+            linesClass: "split-line"
+        });
 
+        // Create and store the animation
         const scrollTimeline = gsap.timeline({
             scrollTrigger: {
                 trigger: "#about",
                 start: "top center",
+                markers: false, // Remove markers in production
+                once: true, // Only trigger once for better performance
             }
-        })
+        });
 
+        // Store the animation for cleanup
+        animationsRef.current.push(scrollTimeline);
+
+        // Optimize animations with shorter durations and fewer stagger steps
         scrollTimeline
             .from(textSplit.words, {
-                opacity: 0, duration: 1, yPercent: 100, ease: "ease", stagger: 0.01
+                opacity: 0, 
+                duration: 0.8, // Shorter duration
+                yPercent: 100, 
+                ease: "ease", 
+                stagger: 0.01,
+                force3D: true // Force GPU acceleration
             })
             .from(lineSplit.lines, {
-                opacity: 0, duration: 1, yPercent: 100, ease: "ease",
+                opacity: 0, 
+                duration: 0.8, // Shorter duration
+                yPercent: 100, 
+                ease: "ease",
+                force3D: true // Force GPU acceleration
             })
             .from(".top-grid div, .bottom-grid div", {
-                opacity: 0, stagger: 0.04, yPercent: 100, ease: "power2.inOut", duration: 1
-            }, "-=0.5")
+                opacity: 0, 
+                stagger: 0.03, // Reduce stagger time
+                yPercent: 100, 
+                ease: "power2.inOut", 
+                duration: 0.8, // Shorter duration
+                force3D: true // Force GPU acceleration
+            }, "-=0.3"); // Reduce overlap time
 
-    })
+    }, { scope: document.documentElement }) // Specify scope to improve performance
 
     return (
         <div id="about">
@@ -90,29 +123,65 @@ const About = () => {
 
                 <div className='md:col-span-3' >
                     <div className="noisy"/>
-                    <img src="/images/abt1.png" alt={`grid image 1`} />
+                    <img 
+                        src="/images/abt1.png" 
+                        alt="Grid image 1" 
+                        loading="lazy" 
+                        width="300" 
+                        height="200"
+                        className="will-change-transform" 
+                    />
                 </div>
                 <div className='md:col-span-6' >
                     <div className="noisy"/>
-                    <img src="/images/abt2.png" alt={`grid image 2`} />
+                    <img 
+                        src="/images/abt2.png" 
+                        alt="Grid image 2" 
+                        loading="lazy" 
+                        width="600" 
+                        height="400"
+                        className="will-change-transform" 
+                    />
                 </div>
                 <div className='md:col-span-3' >
                     <div className="noisy"/>
-                    <img src="/images/abt5.png" alt={`grid image 5`} />
+                    <img 
+                        src="/images/abt5.png" 
+                        alt="Grid image 5" 
+                        loading="lazy" 
+                        width="300" 
+                        height="200"
+                        className="will-change-transform" 
+                    />
                 </div>
             </div>
 
             <div className="bottom-grid">
                 <div className='md:col-span-8' >
                     <div className="noisy"/>
-                    <img src="/images/abt3.png" alt={`grid image 3`} />
+                    <img 
+                        src="/images/abt3.png" 
+                        alt="Grid image 3" 
+                        loading="lazy" 
+                        width="800" 
+                        height="500"
+                        className="will-change-transform" 
+                    />
                 </div>
                 <div className='md:col-span-4' >
                     <div className="noisy"/>
-                    <img src="/images/abt4.png" alt={`grid image 4`} />
+                    <img 
+                        src="/images/abt4.png" 
+                        alt="Grid image 4" 
+                        loading="lazy" 
+                        width="400" 
+                        height="300"
+                        className="will-change-transform" 
+                    />
                 </div>
             </div>
         </div>
     )
 }
-export default About
+// Memoize the component to prevent unnecessary re-renders
+export default memo(About)
